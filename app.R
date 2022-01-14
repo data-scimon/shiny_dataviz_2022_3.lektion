@@ -22,11 +22,7 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             
-            selectInput("xaxis", "Vælg x-akse", choices = names(passat),
-                        selected = "km_per_liter", TRUE, multiple = FALSE),
             
-            selectInput("yaxis", label = "Vælg y-akse", choices = names(passat),
-                        multiple = FALSE),
             
             sliderInput("alpha", "Vælg transparenthed",
                         min = 0.1,
@@ -37,6 +33,8 @@ ui <- fluidPage(
                         min = 1,
                         max = 20,
                         value = 5),
+            
+            #textInput("title", "Skriv din titel her"),
             
             submitButton("Lav ændringer")
             
@@ -53,6 +51,12 @@ ui <- fluidPage(
             tabsetPanel(id = "tabs",
                         tabPanel("Plot",
                                  br(),
+                                 selectInput("xaxis", "Vælg x-akse", choices = names(passat),
+                                             selected = "km_per_liter", TRUE, multiple = FALSE),
+                                 
+                                 selectInput("yaxis", label = "Vælg y-akse", choices = names(passat),
+                                             multiple = FALSE),
+                                 br(),
                                  plotOutput("plot")),
                         tabPanel("Tabel", tableOutput("tabel")))
             
@@ -68,7 +72,9 @@ server <- function(input, output) {
         theme_set(theme_bw())
         
         ggplot(data = passat, aes_string(x = as.name(input$xaxis), y = as.name(input$yaxis))) +
-            geom_point(size = input$size, alpha = input$alpha)
+            geom_point(size = input$size, alpha = input$alpha) +
+            labs(title = paste0("Her er sammenhængen mellem ", as.name(input$xaxis),
+                                " og ", as.name(input$yaxis)))
         
     })
     
