@@ -36,6 +36,12 @@ ui <- fluidPage(
                         max = 20,
                         value = 5),
             
+            sliderInput("price_adj", "Vælg max pris",
+                        min = min(passat$price),
+                        max = max(passat$price),
+                        value = median(passat$price),
+                        step = 10000),
+            
             #textInput("title", "Skriv din titel her"),
             
             submitButton("Lav ændringer")
@@ -80,7 +86,10 @@ server <- function(input, output) {
     
     output$tabel <- renderTable({
         
-        head(passat)
+        pas_adj <- passat %>%
+            filter(price <= input$price_adj)
+        
+        print(pas_adj)
         
     })
     
