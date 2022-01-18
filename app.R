@@ -7,6 +7,8 @@ passat <- read_excel("passat.xlsx")
 theme_set(theme_minimal())
 options(scipen = 999)
 
+
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
@@ -69,8 +71,6 @@ server <- function(input, output) {
     
     output$plot <- renderPlot({
         
-        theme_set(theme_bw())
-        
         ggplot(data = passat, aes_string(x = as.name(input$xaxis), y = as.name(input$yaxis))) +
             geom_point(size = input$size, alpha = input$alpha) +
             labs(title = paste0("Her er sammenhængen mellem ", as.name(input$xaxis),
@@ -78,7 +78,15 @@ server <- function(input, output) {
         
     })
     
+    output$tabel <- renderTable({
+        
+        head(passat)
+        
+    })
+    
 }
+
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
