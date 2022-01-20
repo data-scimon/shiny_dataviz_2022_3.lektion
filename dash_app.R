@@ -40,7 +40,8 @@ ui <- dashboardPage(
             
             tabItem(tabName = "kbh",
                     
-                    fluidRow(valueBoxOutput(width = 3, "rt")))
+                    fluidRow(valueBoxOutput(width = 3, "rt"),
+                             valueBoxOutput(width = 3, "tp")))
         )
         
     )
@@ -61,9 +62,26 @@ server <- function(input, output) {
                  subtitle = paste0("Kontakttal pr. ", last_row$SampleDate),icon = icon("people-arrows"), color = "yellow")
         
     })
+    
+    output$tp <- renderValueBox({
+        
+        pos1 <- tp %>%
+            
+            slice_tail(n = 9) %>%
+            
+            slice_head(n = 7)
+        
+        p_p <- mean(pos1$PosPct)
+        
+        p <- round(p_p, digits = 2)
+        
+        valueBox(value = (paste0(p, " %")), "Positiv % for rullende syv dage", icon = icon("percent"), color = "blue")
+        
+    })
 
     
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
