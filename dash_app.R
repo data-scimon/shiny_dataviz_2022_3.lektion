@@ -41,7 +41,29 @@ ui <- dashboardPage(
             tabItem(tabName = "kbh",
                     
                     fluidRow(valueBoxOutput(width = 3, "rt"),
-                             valueBoxOutput(width = 3, "tp")))
+                             valueBoxOutput(width = 3, "tp")),
+                    
+                    fluidRow(
+                        
+                        tabBox(title = "Tendens", id = "tendens", width = 12,
+                               
+                               tabPanel("Kontakttal",
+                                        fluidRow(column(width = 4, box(title = "Vælg datoer", status = "primary", width = NULL,
+                                                                       solidHeader = TRUE,
+                                                                       
+                                                                       dateRangeInput(inputId = "rt_date", "Vælg datoer",
+                                                                                      start = Sys.Date(),
+                                                                                      end = Sys.Date(),
+                                                                                      max = Sys.Date(),
+                                                                                      startview = "month",
+                                                                                      weekstart = 1),
+                                                                       
+                                                                       checkboxInput("trend_line", label = "Plot en tendslinje", value = TRUE),
+                                                                       
+                                                                       ))),
+                                        
+                                        fluidRow(column(width = 12, box(title = "Kontakttal over tid", status = "primary", width = NULL,
+                                                        plotOutput("rt_tendens"))))))))
         )
         
     )
@@ -71,12 +93,34 @@ server <- function(input, output) {
             
             slice_head(n = 7)
         
-        p_p <- mean(pos1$PosPct)
+        p_p <- mean(pos1$PosPct) %>%
+            round(., digits = 2)
         
-        p <- round(p_p, digits = 2)
         
-        valueBox(value = (paste0(p, " %")), "Positiv % for rullende syv dage", icon = icon("percent"), color = "blue")
+        valueBox(value = (paste0(p_p, " %")), "Positiv % for rullende syv dage", icon = icon("percent"), color = "blue")
         
+    })
+    
+    
+    output$rt_tendens <- renderPlot({
+        
+        rt2 <- rt %>%
+            
+            filter(SampleDate >= as.Date(input$rt_date[1]) & SampleDate <= as.Date(input$rt_date[2]))
+        
+        p <- ggplot(rt2, aes(as.Date(SampleDate), estimate)) +
+            geom_line() +
+            geom_hline(yintercept = 1, color = "red", size = 2, alpha = 0.5) +
+            labs(x = "Dato",
+                 y = "Kontakttal")
+        
+        if(input$trend_line) {
+            
+            p <- p + geom_smooth(se = FALSE)
+        }
+        
+        print(p)
+    
     })
 
     
