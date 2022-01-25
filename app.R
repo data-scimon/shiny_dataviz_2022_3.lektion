@@ -61,7 +61,7 @@ ui <- fluidPage(
             
             
             
-            submitButton("Lav ændringer"),
+            # submitButton("Lav ændringer"),
             
             hr(),
             
