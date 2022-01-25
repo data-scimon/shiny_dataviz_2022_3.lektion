@@ -3,9 +3,19 @@ library(tidyverse)
 library(readxl)
 library(shinythemes)
 
+library(shinyWidgets)
+
+library(googlesheets4)
+
+gs4_auth(cache = ".secrets",
+         email = "simonmj91@hotmail.com")
+
+
+
 
 passat <- read_excel("passat.xlsx")
 rt <- read_csv2("Rt_cases.csv")
+
 
 
 theme_set(theme_minimal())
@@ -49,9 +59,43 @@ ui <- fluidPage(
             
             #textInput("title", "Skriv din titel her"),
             
-            submitButton("Lav ændringer")
             
-        ),
+            
+            submitButton("Lav ændringer"),
+            
+            hr(),
+            
+            helpText("Dataopsamling"),
+            
+            selectizeInput("bruger", label = "Navn",
+                           choices = c("Simon", "Michael D", "Henrik", "Magnus", "Michael B", "Anja", "Teit", "Jeppe"),
+                           options = list(
+                               placeholder = "Vælg en bruger",
+                               onInitialize = I('function() {this.setValue(""); }'))),
+            
+            dateInput("date", "Fødselsdato", 
+                      value = Sys.Date(), 
+                      min = NULL,
+                      max = NULL,
+                      format = "yyyy-mm-dd",
+                      startview = "year",
+                      weekstart = 1,
+                      width = NULL),
+                           
+            textInput("fødeby", "Fødeby",
+                      placeholder = "Vælg din fødeby"),
+            
+            radioButtons("køn", "Køn",
+                         choices = c("Mand", "Kvinde")),
+            
+            numericInput("tid", "Timer brugt på studiet om ugen",
+                         value = NULL),
+            
+            sliderTextInput("glad", label = "Hvor glad er du i dag?",
+                            choices = c("Ked", "Lidt nede", "Middel", "Glad", "Meget glad"),
+                           selected = c("Middel")),
+            
+            actionButton("add", "Tilføj observation")),
 
         # Show a plot of the generated distribution
         mainPanel(
@@ -77,9 +121,9 @@ ui <- fluidPage(
                         tabPanel("Corona-plot",
                                  br(),
                                  dateRangeInput(inputId = "rt_date", "Vælg datoer",
-                                                start = "2020-04-01",
-                                                end = "2020-05-01",
-                                                max = "Sys.Date()",
+                                                start = Sys.Date()-30,
+                                                end = Sys.Date(),
+                                                max = Sys.Date(),
                                                 startview = "month",
                                                 weekstart = 1),
                                  plotOutput("covid_plot")))
@@ -88,8 +132,54 @@ ui <- fluidPage(
     )
 )
 
+table_data <- data.frame(bruger = as.character(),
+                         date = as.Date(as.character()),
+                         fødeby = as.character(),
+                         køn = as.character(),
+                         tid = as.numeric(),
+                         glad = as.character(),
+                         check.names = FALSE)
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+    
+    
+    tableValues <- reactiveValues(
+        
+        df = data.frame(bruger = as.character(),
+                         date = as.Date(as.character()),
+                         fødeby = as.character(),
+                         køn = as.character(),
+                         tid = as.numeric(),
+                         glad = as.character(),
+                         check.names = FALSE))
+    
+    
+    observeEvent(input$add, {
+        
+        show_alert(title = "Observation blev tilføjet!",
+                   type = "success")
+        
+        data <- tableValues$ny
+        
+        newRow <- data.frame(bruger = input$bruger,
+                             date = input$date,
+                             fødeby = input$fødeby,
+                             køn = input$køn,
+                             tid = input$tid,
+                             glad = input$glad,
+                             check.names = FALSE)
+        
+        
+        data <- rbind(data, newRow)
+        
+        tableValues$ny <- data
+        
+        sheet_append("113t7xb2VKnjVMJvnmhixSpgelq2w1tTxdvFCapoErr8", newRow, sheet = 1)
+        
+        })
+    
+    
     
     output$plot <- renderPlot({
         
