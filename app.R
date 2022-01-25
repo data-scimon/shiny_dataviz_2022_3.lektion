@@ -2,6 +2,7 @@ library(shiny)
 library(tidyverse)
 library(readxl)
 library(shinythemes)
+library(DT)
 
 library(shinyWidgets)
 
@@ -15,6 +16,8 @@ gs4_auth(cache = ".secrets",
 
 passat <- read_excel("passat.xlsx")
 rt <- read_csv2("Rt_cases.csv")
+
+navne <- read_excel("navn_test.xlsx")
 
 
 
@@ -67,11 +70,7 @@ ui <- fluidPage(
             
             helpText("Dataopsamling"),
             
-            selectizeInput("bruger", label = "Navn",
-                           choices = c("Simon", "Michael D", "Henrik", "Magnus", "Michael B", "Anja", "Teit", "Jeppe"),
-                           options = list(
-                               placeholder = "Vælg en bruger",
-                               onInitialize = I('function() {this.setValue(""); }'))),
+           textInput("bruger", "Skriv dit navn"),
             
             dateInput("date", "Fødselsdato", 
                       value = Sys.Date(), 
@@ -126,7 +125,11 @@ ui <- fluidPage(
                                                 max = Sys.Date(),
                                                 startview = "month",
                                                 weekstart = 1),
-                                 plotOutput("covid_plot")))
+                                 plotOutput("covid_plot")),
+                        tabPanel("Brugere", 
+                                 br(),
+                                 actionButton("indlæs", "Indlæs datasæt"),
+                                              DTOutput("table_sheet")))
             
         )
     )
@@ -142,6 +145,16 @@ table_data <- data.frame(bruger = as.character(),
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+    
+    
+    output$brugere <- renderUI({
+        
+        selectizeInput("bruger", label = "Navn",
+                   choices = df()$Brugere,
+                   options = list(
+                       placeholder = "Vælg en bruger",
+                       onInitialize = I('function() {this.setValue(""); }')))
+    })
     
     
     tableValues <- reactiveValues(
@@ -178,6 +191,19 @@ server <- function(input, output) {
         sheet_append("113t7xb2VKnjVMJvnmhixSpgelq2w1tTxdvFCapoErr8", newRow, sheet = 1)
         
         })
+    
+    
+    df <- eventReactive(input$indlæs, {
+        
+        read_sheet("https://docs.google.com/spreadsheets/d/113t7xb2VKnjVMJvnmhixSpgelq2w1tTxdvFCapoErr8/edit#gid=0", range = "Brugere")
+        
+    })
+    
+    output$table_sheet <- renderDataTable({
+        
+        datatable(df())
+        
+    })
     
     
     
