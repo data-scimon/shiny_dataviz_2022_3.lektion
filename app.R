@@ -19,6 +19,9 @@ rt <- read_csv2("Rt_cases.csv")
 
 navne <- read_excel("navn_test.xlsx")
 
+df_sheet <- read_sheet("https://docs.google.com/spreadsheets/d/113t7xb2VKnjVMJvnmhixSpgelq2w1tTxdvFCapoErr8/edit#gid=0", range = "Brugere")
+    
+
 
 
 theme_set(theme_minimal())
@@ -70,7 +73,7 @@ ui <- fluidPage(
             
             helpText("Dataopsamling"),
             
-           textInput("bruger", "Skriv dit navn"),
+           
             
             dateInput("date", "Fødselsdato", 
                       value = Sys.Date(), 
@@ -80,6 +83,12 @@ ui <- fluidPage(
                       startview = "year",
                       weekstart = 1,
                       width = NULL),
+            
+            selectizeInput("bruger", label = "Navn",
+                           choices = df_sheet$Brugere,
+                           options = list(
+                               placeholder = "Vælg en bruger",
+                               onInitialize = I('function() {this.setValue(""); }'))),
                            
             textInput("fødeby", "Fødeby",
                       placeholder = "Vælg din fødeby"),
@@ -145,16 +154,7 @@ table_data <- data.frame(bruger = as.character(),
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-    
-    
-    output$brugere <- renderUI({
-        
-        selectizeInput("bruger", label = "Navn",
-                   choices = df()$Brugere,
-                   options = list(
-                       placeholder = "Vælg en bruger",
-                       onInitialize = I('function() {this.setValue(""); }')))
-    })
+
     
     
     tableValues <- reactiveValues(
@@ -193,15 +193,9 @@ server <- function(input, output) {
         })
     
     
-    df <- eventReactive(input$indlæs, {
-        
-        read_sheet("https://docs.google.com/spreadsheets/d/113t7xb2VKnjVMJvnmhixSpgelq2w1tTxdvFCapoErr8/edit#gid=0", range = "Brugere")
-        
-    })
-    
     output$table_sheet <- renderDataTable({
         
-        datatable(df())
+        datatable(df_sheet)
         
     })
     
