@@ -8,9 +8,23 @@ library(shinyWidgets)
 
 library(googlesheets4)
 
+library(shinymanager)
+
 gs4_auth(cache = ".secrets",
          email = "simonmj91@hotmail.com")
 
+
+
+
+# Credentials -------------------------------------------------------------
+
+credentials <- data.frame(
+    user = c("Simon", "Bjarne"),
+    password = c("Roskilde", "Ulfborg"),
+    admin = c("TRUE", "FALSE"),
+    comment = "Log-in",
+    stringsAsFactors = FALSE
+)
 
 
 
@@ -27,6 +41,13 @@ df_sheet <- read_sheet("https://docs.google.com/spreadsheets/d/113t7xb2VKnjVMJvn
 theme_set(theme_minimal())
 options(scipen = 999)
 
+
+
+# UI til password ---------------------------------------------------------
+
+ui <- fluidPage(
+    verbatimTextOutput("auth_output")
+)
 
 
 
@@ -152,8 +173,19 @@ table_data <- data.frame(bruger = as.character(),
                          glad = as.character(),
                          check.names = FALSE)
 
+
+ui <- secure_app(ui)
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+    
+    auth <- secure_server(check_credentials = check_credentials(credentials))
+    
+    output$auth_output <- renderPrint({
+        
+        reactiveValuesToList(auth)
+        
+    })
 
     
     
